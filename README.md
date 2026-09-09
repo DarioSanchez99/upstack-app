@@ -1,4 +1,19 @@
-# Upstack — API Monitoring Frontend
+<div align="center">
+
+# 📡 Upstack — API Monitoring
+
+**SaaS platform for monitoring HTTP endpoints — real-time dashboards, alerts & billing**
+
+![React](https://img.shields.io/badge/React%2018-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+
+</div>
+
+---
 
 Upstack is a SaaS platform for monitoring HTTP endpoints. This repository contains the React frontend that connects to the Upstack API backend.
 
