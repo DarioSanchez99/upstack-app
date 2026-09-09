@@ -8,11 +8,7 @@ import { MonitorStatus } from '@/types'
 
 export default function Dashboard() {
   const { data: monitors, isLoading, isError } = useMonitors()
-
-  // Auto-refetch every 30 seconds
-  const { refetch } = useMonitors()
-  // TanStack Query handles this via refetchInterval; set it in the hook call below
-  // (already configured via the hook; we can override with staleTime + refetchInterval in the query)
+  // TanStack Query handles auto-refetch via refetchInterval configured in the QueryClient
 
   const up = monitors?.filter((m) => m.status === MonitorStatus.UP).length ?? 0
   const down = monitors?.filter((m) => m.status === MonitorStatus.DOWN).length ?? 0
@@ -57,12 +53,14 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">Overview</h2>
-          {globalUptime !== null && (
+          {isLoading ? (
+            <div className="mt-1 h-4 w-48 animate-pulse rounded bg-muted" />
+          ) : globalUptime !== null ? (
             <p className="mt-0.5 text-sm text-muted-foreground">
               Global uptime (7d):&nbsp;
               <span className="font-semibold text-emerald-600">{globalUptime.toFixed(2)}%</span>
             </p>
-          )}
+          ) : null}
         </div>
         <Button asChild>
           <Link to="/monitors/new">
@@ -83,7 +81,11 @@ export default function Dashboard() {
               <card.icon className={`h-4 w-4 ${card.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{isLoading ? '—' : card.value}</div>
+              {isLoading ? (
+                <div className="h-9 w-16 animate-pulse rounded-md bg-muted" />
+              ) : (
+                <div className="text-3xl font-bold">{card.value}</div>
+              )}
             </CardContent>
           </Card>
         ))}

@@ -1,11 +1,11 @@
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { format } from 'date-fns'
-import { CheckCircle, XCircle, AlertTriangle, Zap } from 'lucide-react'
+import { format, formatDistanceToNow } from 'date-fns'
+import { CheckCircle, XCircle, AlertTriangle, Zap, Clock } from 'lucide-react'
 import { StatusBadge } from '@/components/monitors/StatusBadge'
 import api from '@/lib/api'
 import { MonitorStatus } from '@/types'
-import type { Monitor, Workspace } from '@/types'
+import type { Monitor, Workspace, AlertLog } from '@/types'
 
 interface StatusPageData {
   workspace: Workspace
@@ -48,6 +48,118 @@ function OverallStatus({ monitors }: { monitors: Monitor[] }) {
         <p className="text-sm">All services are running normally.</p>
       </div>
     </div>
+  )
+}
+
+interface IncidentHistoryProps {
+  slug: string
+  monitors: Monitor[]
+}
+
+function IncidentHistory({ slug, monitors }: IncidentHistoryProps) {
+  const { data: alerts, isLoading } = useQuery({
+    queryKey: ['status', slug, 'alerts'],
+    queryFn: async () => {
+      const { data } = await api.get<AlertLog[]>(`/api/status/${slug}/alerts`, {
+        params: { limit: 10 },
+      })
+      return data
+    },
+    refetchInterval: 60_000,
+  })
+
+  // Build a monitor name lookup map
+  const monitorMap = Object.fromEntries(monitors.map((m) => [m.id, m.name]))
+
+  // Determine whether any monitor is currently in a non-UP state
+  const hasActiveIncident = monitors.some(
+    (m) => m.status === MonitorStatus.DOWN || m.status === MonitorStatus.DEGRADED
+  )
+
+  return (
+    <section>
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        Incident History
+      </h2>
+
+      {isLoading && (
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-12 animate-pulse rounded-lg bg-muted" />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && (!alerts || alerts.length === 0) && !hasActiveIncident && (
+        <div className="flex items-center gap-3 rounded-xl border bg-card px-5 py-4">
+          <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
+          <p className="text-sm text-muted-foreground">
+            No incidents in the recent period. All systems have been operational.
+          </p>
+        </div>
+      )}
+
+      {!isLoading && alerts && alerts.length > 0 && (
+        <div className="divide-y rounded-xl border bg-card">
+          {alerts.map((alert) => {
+            const isResolved = alert.resolvedAt !== null
+            const monitorName = monitorMap[alert.monitorId] ?? 'Unknown monitor'
+
+            return (
+              <div key={alert.id} className="px-5 py-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    {alert.type === 'DOWN' ? (
+                      <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                    ) : alert.type === 'DEGRADED' ? (
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+                    ) : (
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">
+                        {monitorName}
+                        {' — '}
+                        <span
+                          className={
+                            alert.type === 'DOWN'
+                              ? 'text-red-600'
+                              : alert.type === 'DEGRADED'
+                              ? 'text-yellow-600'
+                              : 'text-emerald-600'
+                          }
+                        >
+                          {alert.type === 'DOWN'
+                            ? 'Outage'
+                            : alert.type === 'DEGRADED'
+                            ? 'Degraded'
+                            : 'Recovered'}
+                        </span>
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{alert.message}</p>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(alert.createdAt), { addSuffix: true })}
+                    </p>
+                    {isResolved ? (
+                      <p className="mt-0.5 flex items-center justify-end gap-1 text-xs text-emerald-600">
+                        <Clock className="h-3 w-3" />
+                        Resolved {format(new Date(alert.resolvedAt!), 'MMM d, HH:mm')}
+                      </p>
+                    ) : (
+                      <p className="mt-0.5 text-xs font-medium text-red-500">Ongoing</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -126,6 +238,9 @@ export default function StatusPage() {
                 )}
               </div>
             </section>
+
+            {/* ─── Incident / alert history ─────────────────────────────── */}
+            <IncidentHistory slug={slug!} monitors={data.monitors} />
           </>
         )}
 

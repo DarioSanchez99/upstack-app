@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Check, Zap, CreditCard } from 'lucide-react'
+import { Check, Zap, CreditCard, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +29,7 @@ const PRO_FEATURES = [
 export default function Billing() {
   const { user } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
   const isPro = user?.plan === Plan.PRO
 
   async function handleUpgrade() {
@@ -52,6 +53,23 @@ export default function Billing() {
       toast.error('Failed to open billing portal. Please try again.')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function handleCancel() {
+    const confirmed = window.confirm(
+      'Are you sure you want to cancel your Pro subscription? You will lose access to Pro features at the end of the current billing period.'
+    )
+    if (!confirmed) return
+
+    setIsCancelling(true)
+    try {
+      const { data } = await api.post<{ url: string }>('/api/billing/portal')
+      window.location.href = data.url
+    } catch {
+      toast.error('Failed to open billing portal. Please try again.')
+    } finally {
+      setIsCancelling(false)
     }
   }
 
@@ -145,6 +163,32 @@ export default function Billing() {
           </CardFooter>
         </Card>
       </div>
+
+      {/* Cancel subscription — only shown to PRO users */}
+      {isPro && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+              <div>
+                <p className="font-semibold text-destructive">Cancel subscription</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  You will keep Pro access until the end of your current billing period. After
+                  that, your account will revert to the Free plan.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="destructive"
+              className="shrink-0"
+              onClick={handleCancel}
+              disabled={isCancelling}
+            >
+              {isCancelling ? 'Redirecting...' : 'Cancel subscription'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <p className="text-center text-xs text-muted-foreground">
         Payments are processed securely by Stripe. Cancel anytime.

@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 // ─── Lazy-loaded pages ────────────────────────────────────────────────────────
 
@@ -45,59 +46,61 @@ function PageLoader() {
 
 export default function App() {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        {/* Root redirect */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/dashboard" replace />
-            </ProtectedRoute>
-          }
-        />
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Root redirect */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/dashboard" replace />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Auth routes (unauthenticated only) */}
-        <Route
-          path="/login"
-          element={
-            <AuthRoute>
-              <Login />
-            </AuthRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <AuthRoute>
-              <Register />
-            </AuthRoute>
-          }
-        />
+          {/* Auth routes (unauthenticated only) */}
+          <Route
+            path="/login"
+            element={
+              <AuthRoute>
+                <Login />
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <AuthRoute>
+                <Register />
+              </AuthRoute>
+            }
+          />
 
-        {/* Public status page */}
-        <Route path="/status/:slug" element={<StatusPage />} />
+          {/* Public status page */}
+          <Route path="/status/:slug" element={<StatusPage />} />
 
-        {/* Protected app routes */}
-        <Route
-          element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/monitors" element={<MonitorList />} />
-          <Route path="/monitors/new" element={<MonitorNew />} />
-          <Route path="/monitors/:id" element={<MonitorDetail />} />
-          <Route path="/monitors/:id/edit" element={<MonitorEdit />} />
-          <Route path="/settings" element={<Profile />} />
-          <Route path="/settings/billing" element={<Billing />} />
-        </Route>
+          {/* Protected app routes */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/monitors" element={<MonitorList />} />
+            <Route path="/monitors/new" element={<MonitorNew />} />
+            <Route path="/monitors/:id" element={<MonitorDetail />} />
+            <Route path="/monitors/:id/edit" element={<MonitorEdit />} />
+            <Route path="/settings" element={<Profile />} />
+            <Route path="/settings/billing" element={<Billing />} />
+          </Route>
 
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   )
 }

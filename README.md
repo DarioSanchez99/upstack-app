@@ -51,7 +51,7 @@ Upstack is a SaaS platform for monitoring HTTP endpoints. This repository contai
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/upstack-app.git
+git clone https://github.com/DarioSanchez99/upstack-app.git
 cd upstack-app
 
 # 2. Install dependencies
@@ -152,7 +152,7 @@ npm run preview
 ### 1. Push to GitHub
 
 ```bash
-git remote add origin https://github.com/your-org/upstack-app.git
+git remote add origin https://github.com/DarioSanchez99/upstack-app.git
 git push -u origin main
 ```
 

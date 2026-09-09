@@ -144,7 +144,7 @@ export default function MonitorDetail() {
         <CardContent className="p-0">
           {!results || results.length === 0 ? (
             <p className="px-6 py-8 text-center text-sm text-muted-foreground">
-              No check results yet.
+              No data yet — first check runs within 1 minute.
             </p>
           ) : (
             <div className="overflow-x-auto">
